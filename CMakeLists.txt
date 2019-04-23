@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 2.8)
+project(cs111_hw2)
+find_package(OpenCV REQUIRED)
+message(STATUS "OpenCV_INCLUDE_DIRS = ${OpenCV_INCLUDE_DIRS}")
+message(STATUS "OpenCV_LIBS = ${OpenCV_LIBS}")
+include_directories(${OpenCV_INCLUDE_DIRS})
+add_executable(hw2 pa2.cpp)
+target_link_libraries(hw2 ${OpenCV_LIBS})
