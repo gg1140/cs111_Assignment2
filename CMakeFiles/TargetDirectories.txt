@@ -1,3 +1,0 @@
-/home/gordonchan/codes/cs111_spring2019/hw2/CMakeFiles/rebuild_cache.dir
-/home/gordonchan/codes/cs111_spring2019/hw2/CMakeFiles/hw2.dir
-/home/gordonchan/codes/cs111_spring2019/hw2/CMakeFiles/edit_cache.dir
