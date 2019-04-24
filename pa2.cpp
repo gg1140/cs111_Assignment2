@@ -63,7 +63,6 @@ Mat ApplyFilter(Mat input, Mat filter) {
         return (x < 0 || x > r || y < 0 || y > c);
     };
 
-	// This is your empty output Mat
 	Mat result(input.rows, input.cols, CV_8UC1);
     int ker_width = filter.rows / 2;
 
@@ -82,12 +81,13 @@ Mat ApplyFilter(Mat input, Mat filter) {
 
                     float pixel = 0.0;
 					if (out_bound(ofset_row, ofset_col)){ // Checking boundary condition
-                        pixel = (float) input.at<uchar>(reflect(ofset_row, ofset_col, input.rows, input.cols));
+                        pixel = (float) input.at<uchar>(
+                                reflect(ofset_row, ofset_col, input.rows, input.cols));
 					} else {
                         pixel = (float) input.at<uchar>(ofset_row, ofset_col);
                     }
-
-                    convol_sum += pixel * filter.at<float>(s, t);
+                    //Access filter elements as if it is a flipped kernal
+                    convol_sum += pixel * filter.at<float>(filter.rows - s - 1, filter.cols - t - 1);
 				}
 			}
 			result.at<uchar>(i, j) = (uchar) convol_sum; // Assign the output value for pixel
@@ -104,7 +104,6 @@ Mat Reduce(Mat input) {
 	// Calculate each pixel of output image
 	for (int i = 0; i < output.rows; i++) {
 		for (int j = 0; j < output.cols; j++) {
-			
 			/*
 			output.at<uchar>(i, j) = ...
 			*/
