@@ -2,4 +2,4 @@ Makefile
 CMakeCache.txt
 cmake_install.cmake
 CMakeFiles/
-test_files/
+test_files/others/
