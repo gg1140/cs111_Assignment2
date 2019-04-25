@@ -53,7 +53,7 @@ Point reflect(int x, int y, int height, int width) {
 /*
  * Apply filter/kernel to input image by performing output side convolution
  */
-Mat ApplyKernal(Mat input, Mat kernel) {
+Mat ApplyKernel(Mat input, Mat kernel) {
 
     auto out_bound = [c=input.cols-1, r=input.rows-1](int x, int y) {
         return (x < 0 || x > r || y < 0 || y > c);
@@ -180,7 +180,7 @@ Mat read_img(int argc, char** argv, int i) {
 
 void write_img(int argc, char** argv, int i, Mat new_img) {
 
-    if (argc <= i + 1 ) {
+    if (argc < i) {
         imwrite(argv[i], new_img);
     }
     else {
@@ -198,6 +198,7 @@ int main(int argc, char** argv) {
 
     if (strcmp(argv[1], "-g") == 0) {
         //Apply gaussian filter
+        cout << "running gaussian filter" << endl;
         Mat og_img = read_img(argc, argv, 2);
         Mat gau_filter = CreateGaussianFilter();
         Mat new_img = ApplyKernel(og_img, gau_filter);
