@@ -3,16 +3,6 @@
 using namespace std;
 using namespace cv;
 
-template <typename T>
-void printMat(Mat& img) {
-    for (int i = 0; i < img.rows; i++) {
-        for (int j = 0; j < img.rows; j++) {
-            cout << "\t|" << img.at<T>(i, j);
-        }
-        cout << endl;
-    }
-}
-
 Mat CreateGaussianFilter() {
     // This is your empty kernel
     // Every entry is a float value
@@ -27,6 +17,7 @@ Mat CreateGaussianFilter() {
             I.at<float>(i, j) = g[i] * g[j];
         }
     }
+
     return I;
 }
 
@@ -95,6 +86,7 @@ Mat ApplyFilter(Mat input, Mat filter) {
             result.at<uchar>(i, j) = (uchar) convol_sum;
         }
     }
+
     return result;
 }
 
@@ -113,6 +105,7 @@ Mat Reduce(Mat input) {
             output.at<uchar>(i, j) = (uchar) ((top_left + top_right + bottom_left + bottom_left) / 4);
         }
     }
+
     return output;
 }
 
@@ -151,50 +144,75 @@ Mat Deduct(Mat I, Mat J) {
 	return result;
 }
 
+Mat read_img(int argc, char** argv, int i) {
+    if (argc < (i + 1)) {
+        printf("specify image path\n");
+        exit(-1);
+    }
+
+    Mat img = imread(argv[i], IMREAD_GRAYSCALE);
+
+    if (!img.data) {
+        printf("No image data \n");
+        exit(-1);
+    }
+    return img;
+}
+
+void write_img(int argc, char** argv, int i, Mat new_img) {
+    if (argc <= i + 1 ) {
+        imwrite(argv[i], new_img);
+    } else {
+        imwrite("new.jpg", new_img);
+    }
+    return;
+}
 
 int main(int argc, char** argv) {
     if (argc < 2) {
         printf("specify function\n");
         return -1;
-    } else if (argc < 3) {
-        printf("specify image path\n");
-        return -1;
     }
 
-    Mat og_img = imread(argv[2], IMREAD_GRAYSCALE);
-
-    if (!og_img.data) {
-        printf("No image data \n");
-        return -1;
-    }
-
-    /*float filter_val[9] = {1/9.0f, 1/9.0f, 1/9.0f,
-                            1/9.0f, 1/9.0f, 1/9.0f,
-                            1/9.0f, 1/9.0f, 1/9.0f};
-    Mat filter = Mat_<float>(3, 3, filter_val);*/
-
-    Mat new_img;
     if (strcmp(argv[1], "-g") == 0) {
+        Mat og_img = read_img(argc, argv, 2);
         Mat gau_filter = CreateGaussianFilter();
-        new_img = ApplyFilter(og_img, gau_filter);
+        Mat new_img = ApplyFilter(og_img, gau_filter);
+        write_img(argc, argv, 3, new_img);
+
     } else if (strcmp(argv[1], "-gr") == 0) {
+        Mat og_img = read_img(argc, argv, 2);
         Mat gau_filter = CreateGaussianFilter();
-        new_img = Reduce(ApplyFilter(og_img, gau_filter));
+        Mat new_img = Reduce(ApplyFilter(og_img, gau_filter));
+        write_img(argc, argv, 3, new_img);
+
     } else if (strcmp(argv[1], "-r") == 0) {
-        new_img = Reduce(og_img);
-    } else if (strcmp(argv[1], "d")) {
-        Mat gau_filter = CreateGaussianFilter();
-        Mat temp_img = Deduct(og_img, ApplyFilter(og_img, gau_filter));
-        resize(temp_img, new_img, Size(512, 512));
+        Mat og_img = read_img(argc, argv, 2);
+        Mat new_img = Reduce(og_img);
+        write_img(argc, argv, 3, new_img);
+
+    } else if (strcmp(argv[1], "-d") == 0) {
+        Mat img_1 = read_img(argc, argv, 2);
+        Mat img_2 = read_img(argc, argv, 3);
+        Mat new_img = Deduct(img_1, img_2);
+        write_img(argc, argv, 4, new_img);
+
+    } else if (strcmp(argv[1], "--resize") == 0) {
+        Mat og_img = read_img(argc, argv, 2);
+        Mat new_img;
+
+        if (argc < 5) {
+            printf("specify width, height");
+            exit(-1);
+        }
+
+        resize(og_img, new_img, Size(atoi(argv[3]), atoi(argv[4])));
+        write_img(argc, argv, 5, new_img);
+
     } else {
         printf("unknown function \"%s\"\n", argv[1]);
         return -1;
     }
 
-    if (argc = 4) {
-        imwrite(argv[3], new_img);
-    } else {
-        imwrite("new.jpg", new_img);
-    }
     return 0;
 }
