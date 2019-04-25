@@ -65,11 +65,11 @@ Mat ApplyFilter(Mat input, Mat filter) {
 
     Mat result(input.rows, input.cols, CV_8UC1);
 
-	for (int i = 0; i < result.rows; i++) {
-		for (int j = 0; j < result.cols; j++) {
-			// Perform convolution for this pixel
+    for (int i = 0; i < result.rows; i++) {
+        for (int j = 0; j < result.cols; j++) {
+            // Perform convolution for this input sample pixel
             float convol_sum = 0;
-            // Position of kernal's first element in terms of input image
+            // Position the central element of the kernal at i, j
             int ker_start_row = i - filter.rows / 2;
             int ker_start_col = j - filter.cols / 2;
 
@@ -79,9 +79,10 @@ Mat ApplyFilter(Mat input, Mat filter) {
                     int pix_col = ker_start_col + t;
 
                     float pixel = 0.0;
-                    if (out_bound(pix_row, pix_col)) { // Checking boundary condition
-                        pixel = (float) input.at<uchar>(
-                                reflect(pix_row, pix_col, input.rows, input.cols));
+                    // Checking boundary condition & retrive appropriate pixel
+                    if (out_bound(pix_row, pix_col)) {
+                        pixel = (float) input.at<uchar>(reflect(pix_row, pix_col,
+                                                                input.rows, input.cols));
                     } else {
                         pixel = (float) input.at<uchar>(pix_row, pix_col);
                     }
@@ -90,7 +91,8 @@ Mat ApplyFilter(Mat input, Mat filter) {
                                                             filter.cols - t - 1);
                 }
             }
-            result.at<uchar>(i, j) = (uchar) convol_sum; // Assign the output value for pixel
+            // Assign the output value for pixel
+            result.at<uchar>(i, j) = (uchar) convol_sum;
         }
     }
     return result;
@@ -99,7 +101,6 @@ Mat ApplyFilter(Mat input, Mat filter) {
 Mat Reduce(Mat input) {
     // THis is your empty output image
     Mat output(input.rows / 2, input.cols / 2, CV_8UC1);
-
     // Calculate each pixel of output image
     for (int i = 0; i < output.rows; i++) {
         int input_row = i * 2;
@@ -116,29 +117,34 @@ Mat Reduce(Mat input) {
 }
 
 Mat Deduct(Mat I, Mat J) {
-	
 	// Intermediate pixel to keep the differences
 	// Each entry is int
 	Mat intermediate(I.rows, I.cols, CV_32SC1);
 	int minVal = 256;
 	int maxVal = -256;
-	for (int i = 0; i < intermediate.rows; i++) {
+
+    for (int i = 0; i < intermediate.rows; i++) {
 		for (int j = 0; j < intermediate.cols; j++) {
-			/*
-				Calculate the intermediate pixel values
-			*/
+            //	Calculate the intermediate pixel values
+            int diff = (int) I.at<uchar>(i, j) - (int) J.at<uchar>(i, j);
+            intermediate.at<int>(i, j) = diff;
+
+            if (diff < minVal) {
+                minVal = diff;
+            }
+            if (diff > maxVal) {
+                maxVal = diff;
+            }
 		}
 	}
-	float dynamicRange = maxVal - minVal;
-
 	// The output image of type unsigned char for each pixel
 	Mat result(I.rows, I.cols, CV_8UC1);
+	float dynamicRange = maxVal - minVal;
+
 	for (int i = 0; i < result.rows; i++) {
 		for (int j = 0; j < result.cols; j++) {
-			/*
 			// Calculate the output pixels
-			result.at<uchar>(i, j) = ...
-			*/
+			result.at<uchar>(i, j) = 255 * (intermediate.at<int>(i, j) - minVal) / dynamicRange;
 		}
 	}
 
@@ -176,6 +182,10 @@ int main(int argc, char** argv) {
         new_img = Reduce(ApplyFilter(og_img, gau_filter));
     } else if (strcmp(argv[1], "-r") == 0) {
         new_img = Reduce(og_img);
+    } else if (strcmp(argv[1], "d")) {
+        Mat gau_filter = CreateGaussianFilter();
+        Mat temp_img = Deduct(og_img, ApplyFilter(og_img, gau_filter));
+        resize(temp_img, new_img, Size(512, 512));
     } else {
         printf("unknown function \"%s\"\n", argv[1]);
         return -1;
